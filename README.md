@@ -21,3 +21,11 @@
 #### Links/related information:
 - https://github.com/hunleyd/mdadm_notify
 - https://www.suse.com/de-de/support/kb/doc/?id=000016716
+
+----
+
+### Grow root parition
+
+#### Extend partition to remaining size
+1) install `dnf install -y cloud-utils-growpart`
+2) `growpart  /dev/vda 2`

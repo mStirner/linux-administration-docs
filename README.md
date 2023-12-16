@@ -24,8 +24,11 @@
 
 ----
 
-### Grow root parition
+### Grow root parition (Rocky 9)
 
 #### Extend partition to remaining size
 1) install `dnf install -y cloud-utils-growpart`
 2) `growpart  /dev/vda 2`
+3) `pvs` & `vgs` & `lvs`
+4) `lvextend -l +100%FREE /dev/rl_nextcloud/root`
+5) `xfs_growfs /`

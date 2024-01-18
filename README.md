@@ -32,3 +32,24 @@
 3) `pvs` & `vgs` & `lvs`
 4) `lvextend -l +100%FREE /dev/rl_nextcloud/root`
 5) `xfs_growfs /`
+
+----
+
+### Resize disks
+```sh
+#!/bin/bash
+for i in `echo "sda sdb sdc sdd sde sdf sdg sdh"`; do
+  echo 1 > /sys/block/$i/device/rescan
+done
+
+for i in `echo "sdb sdc sdd sde sdf sdh sdg"`; do
+  echo "Fix" | parted ---pretend-input-tty /dev/$i print
+  parted -s /dev/$i resizepart 1 '100%' &&
+  pvresize /dev/"$i"1
+done
+
+for x in `ls /dev/mapper/vg_hana*`; do
+  lvextend -l+100%FREE $x &&
+  xfs_growfs $x
+done
+```

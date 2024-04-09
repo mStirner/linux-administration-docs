@@ -53,3 +53,88 @@ for x in `ls /dev/mapper/vg_hana*`; do
   xfs_growfs $x
 done
 ```
+
+---
+
+### QEMU/KVM Virtualization
+```sh
+sudo apt install qemu-kvm virt-manager virtinst libvirt-clients bridge-utils libvirt-daemon-system -y
+sudo systemctl enable --now libvirtd
+```
+
+#### Add user to groups
+```sh
+sudo usermod -aG kvm $USER
+sudo usermod -aG libvirt $USER
+```
+
+#### Start GUI
+```sh
+virt-manager
+```
+
+#### Install guest agent (In Rocky 9 VMs)
+```sh
+sudo dnf install qemu-guest-agent
+```
+
+---
+
+### Kubernetes/k3s quick start
+
+#### Prepare firewall/nodes
+```sh
+firewall-cmd --add-port=6443/tcp --permanent
+firewall-cmd --add-port=2379/tcp --permanent
+firewall-cmd --add-port=2380/tcp --permanent
+firewall-cmd --reload
+```
+
+#### `kubectl` installation
+```sh
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+mv kubectl /usr/local/bin/
+```
+
+#### k3s installation
+```sh
+sudo mkdir -p /etc/rancher/k3s
+sudo echo "disable: traefik" > /etc/rancher/k3s/config.yaml
+curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+```
+
+> [!TIP] 
+> Set the env var `INSTALL_K3S_VERSION`  (e.g. `export INSTALL_K3S_VERSION=v1.28.8+k3s1`) to install a specific k3s/kubernetes version.
+> Version available: https://github.com/k3s-io/k3s/releases/
+
+
+
+#### Add nodes
+server1
+```sh
+cat /var/lib/rancher/k3s/server/token
+```
+
+serverN
+```sh
+curl -sfL https://get.k3s.io | K3S_TOKEN=<Token> sh -s - server --server https://192.168.122.11:6443
+```
+
+> [!NOTE]
+> Set/install the same version as on the first node
+> Environment variable `INSTALL_K3S_VERSION`.
+> See tip above.
+
+
+#### Remove/Deinstallation
+```sh
+/usr/local/bin/k3s-uninstall.sh
+/usr/local/bin/k3s-agent-uninstall.sh
+```
+
+#### Copy cluster config 
+```sh
+mkdir ~/.kube
+cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+```

@@ -3,7 +3,11 @@
 #### Setup
 1) Copy script [ssh-notfiy.sh](./scripts/ssh-notify.sh) to `/etc/ssh/login-notify.sh`
 2) Make script exectuable: `chmod +x /etc/ssh/login-notify.s`
-3) Edit `/etc/pam.d/sshd`, add: `session required pam_exec.so seteuid /etc/ssh/login-notify.sh`
+3) Edit `/etc/pam.d/sshd`, add: `session optional pam_exec.so seteuid /etc/ssh/login-notify.sh`
+
+> [!CAUTION]
+> Setting `session optional pam_exec.so seteuid /etc/ssh/login-notify.sh` to `session required ...`
+> Can lead unavailable ssh login when gotify/the script fails
 
 #### Links/related information:
 - https://askubuntu.com/a/448602/1034948

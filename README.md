@@ -142,3 +142,110 @@ curl -sfL https://get.k3s.io | K3S_TOKEN=<Token> sh -s - server --server https:/
 mkdir ~/.kube
 cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 ```
+
+---
+
+### keepalived (high availibility)
+#### Prepare (on all nodes!)
+```
+firewall-cmd --add-rich-rule='rule protocol value="vrrp" accept' --permanent
+firewall-cmd --reload
+```
+
+#### Installation (& clear default config file)
+```
+yum install -y keepalived
+: > /etc/keepalived/keepalived.conf
+```
+
+
+#### Node 1 (Master)
+```
+vrrp_instance K3S {
+
+    state MASTER
+
+    interface enp1s0
+    virtual_router_id 10
+    priority 200
+    advert_int 1
+
+    unicast_src_ip 192.168.122.11/16
+    
+    unicast_peer {
+        192.168.122.12/16
+        192.168.122.13/16
+    }
+
+    virtual_ipaddress {
+	192.168.122.10/16
+    }
+
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+
+}
+```
+
+#### Node 2 (Backup)
+```
+vrrp_instance K3S {
+
+    state BACKUP
+
+    interface enp1s0
+    virtual_router_id 10
+    priority 190
+    advert_int 1
+
+    unicast_src_ip 192.168.122.12/16
+    
+    unicast_peer {
+        192.168.122.11/16
+        192.168.122.13/16
+    }
+
+    virtual_ipaddress {
+	192.168.122.10/16
+    }
+
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+
+}
+```
+
+#### Node 3 (Backup)
+```
+vrrp_instance K3S {
+
+    state BACKUP
+
+    interface enp1s0
+    virtual_router_id 10
+    priority 180
+    advert_int 1
+
+    unicast_src_ip 192.168.122.13/16
+    
+    unicast_peer {
+        192.168.122.11/16
+        192.168.122.12/16
+    }
+
+    virtual_ipaddress {
+	192.168.122.10/16
+    }
+
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+
+}
+```
+

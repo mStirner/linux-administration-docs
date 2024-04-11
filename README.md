@@ -145,7 +145,7 @@ cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 
 ---
 
-### keepalived (high availibility)
+### keepalived (high availability)
 #### Prepare (on all nodes!)
 ```
 firewall-cmd --add-rich-rule='rule protocol value="vrrp" accept' --permanent

@@ -249,3 +249,7 @@ vrrp_instance K3S {
 }
 ```
 
+### Move files from (sub) folders into cwd
+```sh
+find ./ -type f -exec mv -t . {} +
+```

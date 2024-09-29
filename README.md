@@ -253,3 +253,29 @@ vrrp_instance K3S {
 ```sh
 find ./ -type f -exec mv -t . {} +
 ```
+
+---
+
+### Notify on systemd unit file start/stop/restart
+Create unit file in `sudo vim /etc/systemd/system/openhaus-notify@.service`.
+Enable notifications with:
+- `systemctl enable openhaus-notify@backend`
+- `systemctl enable openhaus-notify@connector`
+
+This creates a gotify notification when the connector or backend start, stop or restart.
+
+```systemd
+[Unit]
+Description=OpenHaus service notification for "%i"
+After=%i.service
+BindsTo=%i.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl "http://<gotify url>/message?token=<app token>" -F "title=Service started" -F "message=%i started" -F "priority=5"
+ExecStop=/usr/bin/curl "http://<gotify url>/message?token=<app token>" -F "title=Service stopped" -F "message=%i stopped" -F "priority=5"
+ExecReload=/usr/bin/curl "http://<gotify url>/message?token=<app token>" -F "title=Service restarted" -F "message=%i restarted" -F "priority=5"
+
+[Install]
+WantedBy=%i.service
+```

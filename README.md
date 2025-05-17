@@ -282,5 +282,5 @@ WantedBy=%i.service
 
 ### Run bash command in loop (one liner)
 ```sh
-while true; do 'wscat --connect=ws://127.0.0.1:8080/api/events' sleep 1; done
+while :; do wscat --connect="ws://localhost:8080/api/system/events"; sleep 1; done
 ```

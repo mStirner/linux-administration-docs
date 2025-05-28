@@ -284,3 +284,12 @@ WantedBy=%i.service
 ```sh
 while :; do wscat --connect="ws://localhost:8080/api/system/events"; sleep 1; done
 ```
+
+### Sned SMS via TELTONIKA TRB140
+```sh
+# login
+TOKEN=$(curl -X POST "http://<host>/api/login" -H "Content-Type: application/json" -d '{"username":"<username>","password":"<password>"}' | jq -r '.data.token')
+
+# send
+curl -v -X POST http://<host>/api/messages/actions/send -H "authorization: Bearer $TOKEN" -H "content-type: application/json" -d '{"data":{"modem":"3-1","number":"+4917xxxxxxxxxxxxx","message":"Hello from SMS Gateway"}}'
+```

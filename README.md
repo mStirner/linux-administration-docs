@@ -293,3 +293,92 @@ TOKEN=$(curl -X POST "http://<host>/api/login" -H "Content-Type: application/jso
 # send
 curl -v -X POST http://<host>/api/messages/actions/send -H "authorization: Bearer $TOKEN" -H "content-type: application/json" -d '{"data":{"modem":"3-1","number":"+4917xxxxxxxxxxxxx","message":"Hello from SMS Gateway"}}'
 ```
+
+### Internet connection check with SMS Notification
+/usr/local/bin/__check_internet.sh__
+```sh
+#!/bin/bash
+
+servers=("9.9.9.9" "1.1.1.1" "8.8.8.8")
+#server=("172.16.5.1") #test
+
+api_host="172.16.0.2"
+api_username="<username>"
+api_password='<password>'
+target_number="+4917xxxxxxxxx"
+modem_id="3-1"
+check_interval=30
+
+
+status="OK"
+
+echo "Start internet check script"
+
+while true; do
+
+  success_count=0
+
+  for server in "${servers[@]}"; do
+    if ping -c 1 -W 1 "$server" > /dev/null 2>&1; then
+      ((success_count++))
+    fi
+  done
+
+  if [ "$success_count" -eq 0 ]; then
+    if [ "$status" == "OK" ]; then
+
+      echo "[$(date)] Keine Verbindung — sende Nachricht..."
+
+      TOKEN=$(curl -s -X POST "http://$api_host/api/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"username\":\"$api_username\",\"password\":\"$api_password\"}" | jq -r '.data.token')
+
+      curl -s -X POST "http://$api_host/api/messages/actions/send" \
+        -H "authorization: Bearer $TOKEN" \
+        -H "content-type: application/json" \
+        -d "{\"data\":{\"modem\":\"$modem_id\",\"number\":\"$target_number\",\"message\":\"Internet verbindung Zuhause ausgefallen!\"}}"
+
+      status="TRIGGERED"
+
+    else
+      echo "[$(date)] Keine Verbindung — bereits ausgelöst."
+    fi
+
+  else
+
+    if [ "$status" == "TRIGGERED" ]; then
+
+      echo "[$(date)] Verbindung wieder da - sende Nachricht..."
+
+      TOKEN=$(curl -s -X POST "http://$api_host/api/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"username\":\"$api_username\",\"password\":\"$api_password\"}" | jq -r '.data.token')
+
+      curl -s -X POST "http://$api_host/api/messages/actions/send" \
+        -H "authorization: Bearer $TOKEN" \
+        -H "content-type: application/json" \
+        -d "{\"data\":{\"modem\":\"$modem_id\",\"number\":\"$target_number\",\"message\":\"Internet verbindung Zuhause wiederhergestellt!\"}}"
+
+      status="OK"
+
+    fi
+  fi
+
+  sleep "$check_interval"
+
+done
+```
+
+/etc/systemd/system/__internetcheck.service__:
+```systemd
+[Unit]
+Description=Internet Check Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/check_internet.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
